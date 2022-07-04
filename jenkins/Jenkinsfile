@@ -1,21 +1,15 @@
+@Library('pipeline-library') _
 pipeline{
     agent{
         label "ubuntu"
     }
+
     stages{
-        stage("A"){
+        stage("Print webhook parameters"){
             steps{
-                echo "========executing A========"
-            }
-            post{
-                always{
-                    echo "========always========"
-                }
-                success{
-                    echo "========A executed successfully========"
-                }
-                failure{
-                    echo "========A execution failed========"
+                script {
+                  functions.prepareEnv(WebhookJson)
+                  
                 }
             }
         }
