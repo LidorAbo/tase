@@ -6,7 +6,9 @@ pipeline{
     agent{
         label "ubuntu"
     }
-
+    tools {
+        maven 'mvn-3.8.6'
+    }
     stages{
         stage("Print webhook parameters"){
             steps{
@@ -38,6 +40,20 @@ pipeline{
                     }
                   }
                 }
+            }
+            stage('mvn') {
+                steps {
+                    dir("maven") {
+                        sh """
+                        git checkout master
+                        mvn package
+                        git add target/*.jar 
+                        git commit -m 'Added hello world jar artifact'
+                        git push
+                    """
+                    }
+                    
+                    }
             }
         }
 }
