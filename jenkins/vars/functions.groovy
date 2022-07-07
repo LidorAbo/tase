@@ -10,5 +10,6 @@ def prepareEnv(json) {
     env.removed_files = object.head_commit.removed
     env.added_files = object.head_commit.added
     env.repo_name = object.repository.name
+    env.branch_name = object.repository.default_branch
 
 }

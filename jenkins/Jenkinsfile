@@ -17,6 +17,7 @@ pipeline{
                   functions.prepareEnv(WebhookJson)
                   echo "Webhook parameters:"
                   echo "Repository name: $repo_name"
+                  echo "Branch name: $branch_name"
                   echo "Committer: $committer"
                   echo "Email of the committer: $email"
                   echo "Latest commit id of the committer: $latest_commit"
@@ -47,8 +48,8 @@ pipeline{
                 steps {
                     dir(mvn_folder) {
                         sh """
-                        git checkout master
-                        git reset --hard origin/master
+                        git checkout $branch_name
+                        git reset --hard origin/$branch_name
                         mvn package
                     """
                     }
@@ -61,8 +62,9 @@ pipeline{
                         sh """
                             git config --global user.email $email
                             git config --global user.name $committer
-                            git add target/*.jar 
-                            git commit -m 'Added/Replaced hello world jar artifact'
+                            git add target/*.jar  
+                            git diff --quiet && git diff --staged --quiet || git commit -m 'Added/replaced jar hello world artifact'
+
                         """
                         withCredentials([usernamePassword(credentialsId: 'git-token',
                  usernameVariable: 'username',
