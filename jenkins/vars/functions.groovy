@@ -9,5 +9,6 @@ def prepareEnv(json) {
     env.modified_files = object.head_commit.modified
     env.removed_files = object.head_commit.removed
     env.added_files = object.head_commit.added
+    env.repo_name = object.repository.name
 
 }

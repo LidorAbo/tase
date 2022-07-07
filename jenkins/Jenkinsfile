@@ -2,6 +2,7 @@
 regex = ~/^\[|\]$/
 seperator = ','
 replacing_char = ''
+mvn_folder = 'maven'
 pipeline{
     agent{
         label "ubuntu"
@@ -15,6 +16,7 @@ pipeline{
                 script {
                   functions.prepareEnv(WebhookJson)
                   echo "Webhook parameters:"
+                  echo "Repository name: $repo_name"
                   echo "Committer: $committer"
                   echo "Email of the committer: $email"
                   echo "Latest commit id of the committer: $latest_commit"
@@ -41,19 +43,34 @@ pipeline{
                   }
                 }
             }
-            stage('mvn') {
+            stage('mvn package') {
                 steps {
-                    dir("maven") {
+                    dir(mvn_folder) {
                         sh """
                         git checkout master
+                        git reset --hard origin/master
                         mvn package
-                        git add target/*.jar 
-                        git commit -m 'Added hello world jar artifact'
-                        git push
                     """
                     }
                     
                     }
+            }
+            stage('Upload artifact to git') {
+                steps {
+                    dir(mvn_folder) {
+                        sh """
+                            git config --global user.email $email
+                            git config --global user.name $committer
+                            git add target/*.jar 
+                            git commit -m 'Added/Replaced hello world jar artifact'
+                        """
+                        withCredentials([usernamePassword(credentialsId: 'git-token',
+                 usernameVariable: 'username',
+                 passwordVariable: 'password')]){
+    sh("git push https://$username:$password@github.com/$committer/${repo_name}.git")
+}
+                    }
+                }
             }
         }
 }
