@@ -1,4 +1,7 @@
 @Library('pipeline-library') _
+regex = ~/^\[|\]$/
+seperator = ','
+replacing_char = ''
 pipeline{
     agent{
         label "ubuntu"
@@ -9,20 +12,35 @@ pipeline{
             steps{
                 script {
                   functions.prepareEnv(WebhookJson)
-                  
+                  echo "Webhook parameters:"
+                  echo "Committer: $committer"
+                  echo "Email of the committer: $email"
+                  echo "Latest commit id of the committer: $latest_commit"
+                  modified_files_array = ConvertToArray(modified_files)
+                  for(modified_file in modified_files_array ) {
+                        if(modified_file) {
+                            echo "$modified_file file is  modified"
+                        }
+                        
+                    }
+                  added_files_array = ConvertToArray(added_files)
+                  for(added_file in added_files_array) {
+                        if(added_file) {
+                            echo "$added_file file is added"
+                        }
+                        
+                    }
+                  removed_files_array = ConvertToArray(removed_files)
+                  for(removed_file in removed_files_array) {
+                       if(removed_file) {
+                        echo  "$removed_file file is removed"
+                       }
+                    }
+                  }
                 }
             }
         }
-    }
-    post{
-        always{
-            echo "========always========"
-        }
-        success{
-            echo "========pipeline executed successfully ========"
-        }
-        failure{
-            echo "========pipeline execution failed========"
-        }
-    }
+}
+def ConvertToArray(String array) {
+    return array.replaceAll(regex, replacing_char).split(seperator)
 }
