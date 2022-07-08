@@ -1,0 +1,112 @@
+#!/bin/bash
+VERBOSE=false
+RECURSIVE=false
+declare -a targets
+number_of_archives_decompressed=0
+number_of_archives_not_compressed=0
+counter_archives() {
+  type="$1"
+  if [[ $type == "decompressed" ]]
+    then
+      number_of_archives_decompressed=$((number_of_archives_decompressed+1))
+  else
+    number_of_archives_not_compressed=$((number_of_archives_not_compressed+1))
+  fi
+}
+print_decompress_success() {
+   file_path="$1"
+   uncompress_algorithm="$2"
+   if $VERBOSE
+      then
+        echo "$file_path is uncompressed by $uncompress_algorithm algorithm"
+    fi
+}
+print_decompress_failed() {
+  file_path="$1"
+  if $VERBOSE
+      then
+        echo "$file_path cannot uncompressed by any uncompress algorithm"
+    fi
+}
+decompress() {
+  target="$1"
+  file_name=$(basename "$target")
+  parent_folders=$(dirname "$target")
+  overwrite_zip_format='-o'
+  overwrite_other_formats='-f'
+  case $(file -i "$target") in
+  */x-bzip2*)
+    ( cd "$parent_folders" && bunzip2 $overwrite_other_formats "$file_name")
+    print_decompress_success "$target" "bunzip2"
+    counter_archives "decompressed"
+    ;;
+  */gzip*)
+     ( cd "$parent_folders" && gunzip $overwrite_other_formats "$file_name")
+     print_decompress_success "$target" "gunzip"
+     counter_archives "decompressed"
+     ;;
+  */zip*)
+    ( cd "$parent_folders" && unzip -qq $overwrite_zip_format "$file_name")
+    print_decompress_success "$target" "unzip"
+    counter_archives "decompressed"
+    ;;
+  */x-compress*)
+    ( cd "$parent_folders" && uncompress $overwrite_other_formats "$file_name")
+    print_decompress_success "$target" "uncompress"
+    counter_archives "decompressed"
+    ;;
+  *)
+    print_decompress_failed "$target"
+     counter_archives "not decompressed"
+    ;;
+  esac
+}
+help() {
+ echo "./$(basename "$0") [-h] [-r] [-v] target [target...] - program to uncompress target(file/s and/or dir file/s optionally recursively based algorithm uncompress type"
+ echo
+ echo "Options:"
+ echo "-h - show help"
+ echo "-v - echo each file decompressed &amp; warn for each file that was NOT decompressed"
+ echo "-r - will traverse contents of folders recursively, performing unpack on each file"
+}
+for i in "$@"; do
+  case $i in
+  -v)
+    VERBOSE=true
+    shift
+    ;;
+  -r)
+    RECURSIVE=true
+    shift
+    ;;
+  -h)
+    help
+    exit
+    ;;
+  *)
+    targets+=("$i")
+    ;;
+  esac
+done
+for target in "${targets[@]}"
+do
+  if [[ -f "$target" ]]
+    then
+    decompress $target
+  fi
+  if [[ -d "$target" ]]
+    then
+    if $RECURSIVE
+      then
+        files=$(find "$target" -type f)
+    else
+        files=$(find "$target" -maxdepth 1 -type f)
+    fi
+    for file in ${files[@]}
+      do
+      decompress "$file"
+    done
+  fi
+done
+echo "Number of archives that decompressed are: $number_of_archives_decompressed"
+echo "Number of archives that not decompressed are: $number_of_archives_not_compressed"
