@@ -1,1 +1,1 @@
-create table counter(id integer primary key, count INTEGER DEFAULT 0);
+create table counter(count integer DEFAULT 0);

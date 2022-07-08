@@ -15,7 +15,7 @@ def hello():
                                  auth_plugin='mysql_native_password',
                                  )
     cur = db.cursor()
-    cur.execute("UPDATE counter SET count = count + 1 WHERE id = '%s'" % 1)
+    cur.execute("UPDATE counter SET count = count + 1")
     try:
         db.commit()
     except:

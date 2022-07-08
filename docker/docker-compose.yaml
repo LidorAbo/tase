@@ -12,7 +12,7 @@ services:
     build: ./mysql
     command: mysqld --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_DATABASE: 'web'
+      MYSQL_DATABASE: $DB_NAME
       # Password for root access
       MYSQL_ROOT_PASSWORD: $DB_PASSWORD
     volumes:
