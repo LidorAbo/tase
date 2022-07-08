@@ -1,0 +1,8 @@
+---
+  - name: "Deploy docker-compose services"
+    hosts: localhost
+    connection: local
+    tasks:
+    - name: "Running docker-compose up from yaml file"
+      docker_compose:
+          project_src: ../docker
